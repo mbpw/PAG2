@@ -22,4 +22,3 @@ for row in arcpy.da.SearchCursor(infc, ["OID@", "SHAPE@"]):
     #Set End coordinates
     endx = endpt.X
     endy = endpt.Y
-	#cośdodałem
