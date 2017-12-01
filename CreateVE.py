@@ -77,3 +77,21 @@ arcpy.DeleteIdentical_management(vertFC, "SHAPE")
 # Czyszczenie pamięci
 del inVCursor
 del inECursor
+
+graph = {}
+xy = {}
+edges = {}
+
+for row in arcpy.da.SearchCursor(vertFC, ["VID", "X", "Y"]):
+    id = row[0]
+    graph[id] = []
+    xy[id] = [row[1], row[2]]
+
+for row in arcpy.da.SearchCursor(edgeFC, ["EID", "id_from", "id_to", "id_jezdni"]):
+    graph[row[1]].append(row[2])
+    graph[row[2]].append(row[1])
+    edges[row[0]].append([row[1], row[2], row[3]])
+
+print graph
+print xy
+print edges
