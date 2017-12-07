@@ -96,7 +96,7 @@ print u"Przeszukuję wierzchołki"
 for row in arcpy.da.SearchCursor(vertFC, ["VID", "X", "Y"]):
     id = row[0]
     graph[id] = []
-    xy[id] = [row[1], row[2]]
+    xy[id] = (row[1], row[2])
 
 print u"Przeszukuję krawędzie"
 for row in arcpy.da.SearchCursor(edgeFC, ["EID", "id_from", "id_to", "id_jezdni", "SHAPE@LENGTH", "class"]):
@@ -104,7 +104,10 @@ for row in arcpy.da.SearchCursor(edgeFC, ["EID", "id_from", "id_to", "id_jezdni"
     graph[row[2]].append(row[0])
     edges[row[0]] = [row[1], row[2], row[3], row[4], row[5]]
 
-print graph
-print edges
-#print xy
-#print edges
+# Zapisanie grafu do pliku .py, by można go było importować bez uruchamiania funkcji ArcGIS
+f = open('zmienne.py', 'w')
+f.write('graph = ' + repr(graph) + '\n')
+f.write('xy = ' + repr(xy) + '\n')
+f.write('edges = ' + repr(edges) + '\n')
+f.write('cost_class = ' + repr(cost_class) + '\n')
+f.close()
