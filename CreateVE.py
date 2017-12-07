@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import arcpy
 
+from Astar import Astar
+
 print "Załadowałem arcpy"
 
 arcpy.env.workspace = "D:/! PW/semestr 5/PAG/PAG2/dane_przestrzenne/BDOT_Torun/miasto"  # [zmienić na parametr]
@@ -32,10 +34,11 @@ arcpy.AddField_management(edgeFC, 'EID', 'LONG', 9)
 arcpy.AddField_management(edgeFC, 'id_from', 'LONG', 9)
 arcpy.AddField_management(edgeFC, 'id_to', 'LONG', 9)
 arcpy.AddField_management(edgeFC, 'id_jezdni', 'LONG', 9)
+arcpy.AddField_management(edgeFC, 'class', 'TEXT', 2)
 
 # Tworzenie kursorów do wypełniania kolekcji
 inVCursor = arcpy.da.InsertCursor(vertFC, ["SHAPE@XY", "VID", "X", "Y"])
-inECursor = arcpy.da.InsertCursor(edgeFC, ["SHAPE@", "EID", "id_from", "id_to", "id_jezdni"])
+inECursor = arcpy.da.InsertCursor(edgeFC, ["SHAPE@", "EID", "id_from", "id_to", "id_jezdni", "class"])
 print "Stworzyłem kursory"
 
 # Licznik określający id krawędzi
@@ -43,7 +46,7 @@ count_edge = 0
 
 # Pętla przez istniejące jezdnie
 # Wypełnia pliki "vertices.shp" oraz "edges.shp" tworząc kolekcje wierzchołków i krawędzi
-for row in arcpy.da.SearchCursor(inFC, ["OID@", "SHAPE@"]):
+for row in arcpy.da.SearchCursor(inFC, ["OID@", "SHAPE@", "klasaDrogi"]):
     # Punkt początkowy odcinka jezdni
     startpt = row[1].firstPoint
     startx = startpt.X
@@ -69,7 +72,7 @@ for row in arcpy.da.SearchCursor(inFC, ["OID@", "SHAPE@"]):
     inVCursor.insertRow(eptValues)
 
     # Wstawienie krawędzi
-    inECursor.insertRow((row[1], count_edge, startid, endid, row[0]))
+    inECursor.insertRow((row[1], count_edge, startid, endid, row[0], row[2]))
     count_edge += 1
 
 # Usunięcie zduplikowanych wierzchołków
@@ -78,20 +81,30 @@ arcpy.DeleteIdentical_management(vertFC, "SHAPE")
 del inVCursor
 del inECursor
 
-graph = {}
-xy = {}
-edges = {}
-
+graph = {} #VID: edges_out[]
+xy = {} #VID: [x, y]
+edges = {} #EID: [id_from, id_to, id_jezdni, length, class]
+cost_class = {u'A': 1,
+u'S': 2,
+u'GP': 3,
+u'G': 4,
+u'Z': 5,
+u'L': 6,
+u'D': 7,
+u'I': 8}
+print u"Przeszukuję wierzchołki"
 for row in arcpy.da.SearchCursor(vertFC, ["VID", "X", "Y"]):
     id = row[0]
     graph[id] = []
     xy[id] = [row[1], row[2]]
 
-for row in arcpy.da.SearchCursor(edgeFC, ["EID", "id_from", "id_to", "id_jezdni"]):
-    graph[row[1]].append(row[2])
-    graph[row[2]].append(row[1])
-    edges[row[0]].append([row[1], row[2], row[3]])
+print u"Przeszukuję krawędzie"
+for row in arcpy.da.SearchCursor(edgeFC, ["EID", "id_from", "id_to", "id_jezdni", "SHAPE@LENGTH", "class"]):
+    graph[row[1]].append(row[0])
+    graph[row[2]].append(row[0])
+    edges[row[0]] = [row[1], row[2], row[3], row[4], row[5]]
 
 print graph
-print xy
 print edges
+#print xy
+#print edges
