@@ -2,8 +2,16 @@
 import os
 from time import clock
 import arcpy
-from graf import *
+import graf
 from Astar import *
+
+def secToTime(seconds):
+    m, s = divmod(seconds, 60)
+    h, m = divmod(m, 60)
+    return "%02dh %02dm %02ds" % (h, m, s)
+
+def routeInfo(length, time, searches, edges):
+    return u"Całkowita dlugość trasy: %.3fm \n Czas pokonania: %s \nPrzeszukano %s węzłów \nDługość: %i krawędzi" % (length, secToTime(time), searches, edges)
 
 arcpy.env.workspace = arcpy.GetParameterAsText(0)
 outputWorkspace = arcpy.env.workspace
@@ -22,8 +30,9 @@ searchFC = "search.shp"
 start_vid = arcpy.GetParameter(1) #837249756
 goal_vid = arcpy.GetParameter(2) #346217664
 
-came_from, cost_s, krawedzie, dlugosc, czas = astar(graph, xy, edges, start_vid, goal_vid, arcpy.GetParameter(4), arcpy.GetParameter(3))
-log = u'Całkowita dlugosc trasy (%s): %.3fm \nCzas pokonania: %is \nPrzeszukano %s węzłów \nDługość: %i krawędzi' % (arcpy.GetParameter(3), dlugosc, czas, len(came_from), len(krawedzie))
+came_from, cost_s, krawedzie, dlugosc, czas = astar(graf.graph, graf.xy, graf.edges, start_vid, goal_vid, arcpy.GetParameter(4), arcpy.GetParameter(3))
+arcpy.AddMessage(type(dlugosc))
+log = routeInfo(dlugosc, czas, len(came_from), len(krawedzie))
 arcpy.AddMessage(log)
 
 # Wizualizacja trasy

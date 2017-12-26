@@ -1,6 +1,6 @@
 ﻿# -*- coding: utf-8 -*-
 import arcpy
-
+import os
 
 arcpy.env.workspace = arcpy.GetParameterAsText(0)
 outputWorkspace = arcpy.env.workspace
@@ -117,7 +117,7 @@ for row in arcpy.da.SearchCursor(edgeFC, ["EID", "id_from", "id_to", "id_jezdni"
 
 # Zapisanie grafu do pliku .py, by można go było importować bez uruchamiania funkcji ArcGIS
 arcpy.AddMessage(u"Zapisuję graf do pliku \"graf.py\"")
-f = open('graf.py', 'w+')
+f = open(os.path.join(os.path.dirname(__file__), 'graf.py'), 'w+')
 f.write('graph = ' + repr(graph) + '\n')
 f.write('xy = ' + repr(xy) + '\n')
 f.write('edges = ' + repr(edges) + '\n')
