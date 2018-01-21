@@ -1,6 +1,7 @@
 ﻿# -*- coding: utf-8 -*-
 import math
 from PriorityQueue import *
+import arcpy
 
 def heuristic(a, b, fastest):
     (x1, y1) = a
@@ -18,58 +19,59 @@ def czas(klasa):
 
 # Implementacja algorytmu A* na postawie:
 # https://www.redblobgames.com/pathfinding/a-star/implementation.html
-def astar(graph, xy, edges, start_vid, goal_vid, dijkstra, fastest):
-    frontier = PriorityQueue() # zbiór S
+def astar(graph, xy, edges, start_vid, goal_vid, dijkstra, fastest, alternative_path):
+    frontier = PriorityQueue()  #### zbiór Q
     frontier.put(start_vid, 0)
-    came_from = {} # p - poprzedniki
-    cost_so_far = {} # d - koszty dojścia
+    came_from = {}  #### p - poprzedniki
+    cost_so_far = {}  #### d - koszty dojścia
     came_from[start_vid] = None
     cost_so_far[start_vid] = 0
 
-    if not fastest:
-        while not frontier.empty():
-            current_vid = frontier.get()
-            if current_vid == goal_vid:
-                break
+    while not frontier.empty():
+        current_vid = frontier.get()
+        if current_vid == goal_vid:  #### warunek zakończenia algorytmu - napotkano wierzchołek docelowy
+            break
 
-            for next_edge in graph[current_vid]:  #### zbiór Q - sąsiedzi wierzchołka
-                if edges[next_edge][0] != current_vid:
-                    next_vertex = edges[next_edge][0]
+        for next_edge in graph[current_vid]:  #### zbiór S - sąsiedzi wierzchołka
+            priority = 0
+            if edges[next_edge][0] != current_vid:
+                next_vertex = edges[next_edge][0]
+            else:
+                next_vertex = edges[next_edge][1]
+            length = edges[next_edge][3]  #### długość przeszukiwanej krawędzi
+
+            v_FROM = edges[next_edge][0]  ### vertex FROM
+            v_TO = edges[next_edge][1]  ### vertex TO
+            arcpy.AddMessage("["+str(next_edge)+"] FROM " + str(edges[next_edge][0]) + "TO: " + str(edges[next_edge][1]))
+
+            # Kierunkowość krawędzi
+            kierunkowosc = edges[next_edge][5]
+            if (kierunkowosc != 3) and ((kierunkowosc == 0) or (kierunkowosc == 1 and v_FROM == current_vid) or (kierunkowosc == 2 and v_TO == current_vid)):
+                # Trasa najkrótsza
+                if not fastest:
+                    penalty = length*0.5
+                    new_cost = cost_so_far[current_vid] + length
+                # Trasa najszybsza
                 else:
-                    next_vertex = edges[next_edge][1]
-                length = edges[next_edge][3]
-                new_cost = cost_so_far[current_vid] + length  #### length
+                    klasa = edges[next_edge][4]
+                    time = length / 1000.0 * czas(klasa)
+                    penalty = time * 0.5
+                    new_cost = cost_so_far[current_vid] + time
+                # Kara, jeśli krawędź pokrywa się z poprzednią trasą
+                if next_edge in alternative_path:
+                    new_cost += penalty
+                # Dodanie wierzchołka do Q
                 if next_vertex not in cost_so_far or new_cost < cost_so_far[next_vertex]:
                     cost_so_far[next_vertex] = new_cost
-                    if dijkstra == False:
-                        priority = new_cost + heuristic(xy[goal_vid], xy[next_vertex], False)
+                    if not dijkstra:
+                        priority += new_cost + heuristic(xy[goal_vid], xy[next_vertex], False)
                     else:
-                        priority = new_cost + 0  #### Dijkstra
+                        priority += new_cost + 0  #### Dijkstra
                     frontier.put(next_vertex, priority)
                     came_from[next_vertex] = current_vid
-    else:
-        while not frontier.empty():
-            current_vid = frontier.get()
-            if current_vid == goal_vid:
-                break
 
-            for next_edge in graph[current_vid]:  #### zbiór Q - sąsiedzi wierzchołka
-                if edges[next_edge][0] != current_vid:
-                    next_vertex = edges[next_edge][0]
-                else:
-                    next_vertex = edges[next_edge][1]
-                length = edges[next_edge][3]
-                klasa = edges[next_edge][4]
-                new_cost = cost_so_far[current_vid] + (length/1000.0 * czas(klasa))  #### time
-                if next_vertex not in cost_so_far or new_cost < cost_so_far[next_vertex]:
-                    cost_so_far[next_vertex] = new_cost
-                    if dijkstra == False:
-                        priority = new_cost + heuristic(xy[goal_vid], xy[next_vertex], True)
-                    else:
-                        priority = new_cost + 0  #### Dijkstra
-                    frontier.put(next_vertex, priority)
-                    came_from[next_vertex] = current_vid
-    krawedzie = []
+    # Odtworzenie ścieżki
+    path_edges = []
     curr_vid = goal_vid
     time = 0
     distance = 0
@@ -77,13 +79,12 @@ def astar(graph, xy, edges, start_vid, goal_vid, dijkstra, fastest):
         next_vid = came_from[curr_vid]
         for eid in graph[curr_vid]:
             if edges[eid][1] == next_vid or edges[eid][0] == next_vid:
-                krawedzie.append(eid)
+                path_edges.append(eid)
                 l = edges[eid][3]
                 k = edges[eid][4]
                 distance += l
                 time += (l / 1000) * czas(k)
         curr_vid = next_vid
-    return came_from, cost_so_far, krawedzie, distance, time
 
-
-
+    # Przekazanie listy przeszukanych wierzchołków, krawędzi trasy, obliczonego dystansu oraz czasu
+    return came_from, path_edges, distance, time

@@ -42,12 +42,14 @@ arcpy.AddField_management(edgeFC, 'id_from', 'LONG', 9)
 arcpy.AddField_management(edgeFC, 'id_to', 'LONG', 9)
 arcpy.AddField_management(edgeFC, 'id_jezdni', 'LONG', 9)
 arcpy.AddField_management(edgeFC, 'class', 'TEXT', 2)
+arcpy.AddField_management(edgeFC, 'Kier', 'SHORT', 1)
 # Dodawanie pól (id, id_from, id_to, id_jezdni) do .shp zawierającego trasę
 arcpy.AddField_management(pathFC, 'EID', 'LONG', 9)
 arcpy.AddField_management(pathFC, 'id_from', 'LONG', 9)
 arcpy.AddField_management(pathFC, 'id_to', 'LONG', 9)
 arcpy.AddField_management(pathFC, 'id_jezdni', 'LONG', 9)
 arcpy.AddField_management(pathFC, 'class', 'TEXT', 2)
+arcpy.AddField_management(pathFC, 'Kier', 'SHORT', 1)
 # Dodawanie pól (id, x, y) do kolekcji przeszukanych wierzchołków
 arcpy.AddField_management(searchFC, 'VID', 'LONG', 9)
 arcpy.AddField_management(searchFC, 'X', 'DOUBLE')
@@ -55,7 +57,7 @@ arcpy.AddField_management(searchFC, 'Y', 'DOUBLE')
 
 # Tworzenie kursorów do wypełniania kolekcji
 inVCursor = arcpy.da.InsertCursor(vertFC, ["SHAPE@XY", "VID", "X", "Y"])
-inECursor = arcpy.da.InsertCursor(edgeFC, ["SHAPE@", "EID", "id_from", "id_to", "id_jezdni", "class"])
+inECursor = arcpy.da.InsertCursor(edgeFC, ["SHAPE@", "EID", "id_from", "id_to", "id_jezdni", "class", "Kier"])
 
 # Licznik określający id krawędzi
 count_edge = 0
@@ -63,7 +65,7 @@ count_edge = 0
 # Pętla przez istniejące jezdnie
 # Wypełnia pliki "vertices.shp" oraz "edges.shp" tworząc kolekcje wierzchołków i krawędzi
 arcpy.AddMessage(u"Iteruję po jezdniach")
-for row in arcpy.da.SearchCursor(inFC, ["OID@", "SHAPE@", "klasaDrogi"]):
+for row in arcpy.da.SearchCursor(inFC, ["OID@", "SHAPE@", "klasaDrogi", "Kier"]):
     # Punkt początkowy odcinka jezdni
     startpt = row[1].firstPoint
     startx = startpt.X
@@ -89,7 +91,7 @@ for row in arcpy.da.SearchCursor(inFC, ["OID@", "SHAPE@", "klasaDrogi"]):
     inVCursor.insertRow(eptValues)
 
     # Wstawienie krawędzi
-    inECursor.insertRow((row[1], count_edge, startid, endid, row[0], row[2]))
+    inECursor.insertRow((row[1], count_edge, startid, endid, row[0], row[2], row[3]))
     count_edge += 1
 
 # Usunięcie zduplikowanych wierzchołków
@@ -110,10 +112,10 @@ for row in arcpy.da.SearchCursor(vertFC, ["VID", "X", "Y"]):
     xy[id] = (row[1], row[2])
 
 arcpy.AddMessage(u"Przeszukuję krawędzie")
-for row in arcpy.da.SearchCursor(edgeFC, ["EID", "id_from", "id_to", "id_jezdni", "SHAPE@LENGTH", "class"]):
+for row in arcpy.da.SearchCursor(edgeFC, ["EID", "id_from", "id_to", "id_jezdni", "SHAPE@LENGTH", "class", "Kier"]):
     graph[row[1]].append(row[0])
     graph[row[2]].append(row[0])
-    edges[row[0]] = [row[1], row[2], row[3], row[4], row[5]]
+    edges[row[0]] = [row[1], row[2], row[3], row[4], row[5], row[6]]
 
 # Zapisanie grafu do pliku .py, by można go było importować bez uruchamiania funkcji ArcGIS
 arcpy.AddMessage(u"Zapisuję graf do pliku \"graf.py\"")
