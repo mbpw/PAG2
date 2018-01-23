@@ -41,7 +41,6 @@ def astar(graph, xy, edges, start_vid, goal_vid, dijkstra, fastest, alternative_
 
             v_FROM = edges[next_edge][0]  ### vertex FROM
             v_TO = edges[next_edge][1]  ### vertex TO
-            arcpy.AddMessage("["+str(next_edge)+"] FROM " + str(edges[next_edge][0]) + "TO: " + str(edges[next_edge][1]))
 
             # Kierunkowość krawędzi
             kierunkowosc = edges[next_edge][5]
