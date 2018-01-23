@@ -2,6 +2,7 @@
 import math
 from PriorityQueue import *
 
+
 def heuristic(a, b, fastest):
     (x1, y1) = a
     (x2, y2) = b
@@ -30,10 +31,6 @@ def astar(graph, xy, edges, start_vid, goal_vid, dijkstra, fastest, alternative_
         current_vid = frontier.get()  #### warunek zakończenia algorytmu - napotkano wierzchołek docelowy
         if current_vid == goal_vid:
             break
-    while not frontier.empty():
-        current_vid = frontier.get()
-        if current_vid == goal_vid:  #### warunek zakończenia algorytmu - napotkano wierzchołek docelowy
-            break
 
         for next_edge in graph[current_vid]:  #### zbiór S - sąsiedzi wierzchołka
             priority = 0
@@ -48,7 +45,8 @@ def astar(graph, xy, edges, start_vid, goal_vid, dijkstra, fastest, alternative_
 
             # Kierunkowość krawędzi
             kierunkowosc = edges[next_edge][5]
-            if (kierunkowosc != 3) and ((kierunkowosc == 0) or (kierunkowosc == 1 and v_FROM == current_vid) or (kierunkowosc == 2 and v_TO == current_vid)):
+
+            if (kierunkowosc != 3) and (((kierunkowosc == 0) or (kierunkowosc == 1 and v_FROM == current_vid) or (kierunkowosc == 2 and v_TO == current_vid))):
                 # Trasa najkrótsza
                 if not fastest:
                     penalty = length*0.5
