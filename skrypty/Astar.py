@@ -27,6 +27,10 @@ def astar(graph, xy, edges, start_vid, goal_vid, dijkstra, fastest, alternative_
     cost_so_far[start_vid] = 0
 
     while not frontier.empty():
+        current_vid = frontier.get()  #### warunek zakończenia algorytmu - napotkano wierzchołek docelowy
+        if current_vid == goal_vid:
+            break
+    while not frontier.empty():
         current_vid = frontier.get()
         if current_vid == goal_vid:  #### warunek zakończenia algorytmu - napotkano wierzchołek docelowy
             break
